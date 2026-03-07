@@ -644,6 +644,27 @@ def record_notify(db: Optional[Database], dedupe_key: str, topic: str, payload: 
     db.record_notification(dedupe_key=dedupe_key, channel="ntfy", target=topic, payload=payload)
 
 
+def env_str(name: str, default: str) -> str:
+    value = os.getenv(name)
+    if value is None or value.strip() == "":
+        return default
+    return value
+
+
+def env_int(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value is None or value.strip() == "":
+        return default
+    return int(value)
+
+
+def env_float(name: str, default: float) -> float:
+    value = os.getenv(name)
+    if value is None or value.strip() == "":
+        return default
+    return float(value)
+
+
 def send_ntfy_alerts(
     client: Optional[NtfyClient],
     db: Optional[Database],
@@ -713,18 +734,18 @@ def send_ntfy_alerts(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Scrape bezrealitky listings, persist to Postgres, and send ntfy alerts.")
-    parser.add_argument("--city", default=os.getenv("BZR_CITY", "Hostivice"), help="City/area to target")
-    parser.add_argument("--offer", default=os.getenv("BZR_OFFER", "pronajem"), choices=["pronajem", "prodej"], help="Offer type in URL slug")
+    parser.add_argument("--city", default=env_str("BZR_CITY", "Hostivice"), help="City/area to target")
+    parser.add_argument("--offer", default=env_str("BZR_OFFER", "pronajem"), choices=["pronajem", "prodej"], help="Offer type in URL slug")
     parser.add_argument(
         "--estate-types",
         nargs="+",
-        default=os.getenv("BZR_ESTATE_TYPES", "bytu domu").split(),
+        default=env_str("BZR_ESTATE_TYPES", "bytu domu").split(),
         help="Estate URL tokens to include",
     )
-    parser.add_argument("--max-listings", type=int, default=int(os.getenv("BZR_MAX_LISTINGS", "0")), help="Limit number of listings")
-    parser.add_argument("--workers", type=int, default=int(os.getenv("BZR_WORKERS", "4")), help="Parallel workers")
-    parser.add_argument("--delay", type=float, default=float(os.getenv("BZR_DELAY", "0")), help="Delay in seconds")
-    parser.add_argument("--out-dir", default=os.getenv("BZR_OUT_DIR", "output"), help="Output directory")
+    parser.add_argument("--max-listings", type=int, default=env_int("BZR_MAX_LISTINGS", 0), help="Limit number of listings")
+    parser.add_argument("--workers", type=int, default=env_int("BZR_WORKERS", 4), help="Parallel workers")
+    parser.add_argument("--delay", type=float, default=env_float("BZR_DELAY", 0.0), help="Delay in seconds")
+    parser.add_argument("--out-dir", default=env_str("BZR_OUT_DIR", "output"), help="Output directory")
     parser.add_argument("--db-dsn", default=os.getenv("DB_DSN"), help="PostgreSQL DSN")
     parser.add_argument("--ntfy-topic", default=os.getenv("NTFY_TOPIC"), help="ntfy topic name")
     parser.add_argument("--ntfy-base-url", default=os.getenv("NTFY_BASE_URL", "https://ntfy.sh"), help="ntfy base URL")
