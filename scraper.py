@@ -62,11 +62,15 @@ class PersistResult:
 
 class NtfyClient:
     def __init__(self, topic: str, base_url: str = "https://ntfy.sh", token: Optional[str] = None) -> None:
-        self.topic = topic
-        self.base_url = base_url.rstrip("/")
+        clean_topic = topic.strip().strip("/")
+        clean_base = base_url.strip().rstrip("/") or "https://ntfy.sh"
+        self.topic = clean_topic
+        self.base_url = clean_base
         self.token = token
 
     def send(self, message: str, title: str, tags: str = "house", priority: str = "3") -> None:
+        if not self.topic:
+            raise ValueError("NTFY topic is empty")
         url = f"{self.base_url}/{self.topic}"
         req = Request(url, data=message.encode("utf-8"), method="POST")
         req.add_header("Title", title)
@@ -748,7 +752,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-dir", default=env_str("BZR_OUT_DIR", "output"), help="Output directory")
     parser.add_argument("--db-dsn", default=os.getenv("DB_DSN"), help="PostgreSQL DSN")
     parser.add_argument("--ntfy-topic", default=os.getenv("NTFY_TOPIC"), help="ntfy topic name")
-    parser.add_argument("--ntfy-base-url", default=os.getenv("NTFY_BASE_URL", "https://ntfy.sh"), help="ntfy base URL")
+    parser.add_argument("--ntfy-base-url", default=env_str("NTFY_BASE_URL", "https://ntfy.sh"), help="ntfy base URL")
     parser.add_argument("--ntfy-token", default=os.getenv("NTFY_TOKEN"), help="Optional ntfy bearer token")
     parser.add_argument("--no-notify", action="store_true", help="Disable ntfy notifications")
     return parser.parse_args()
