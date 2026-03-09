@@ -3,7 +3,7 @@ name: bezrealitky-scraper
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 7,15,23 * * *'
 
 jobs:
   scrape:
