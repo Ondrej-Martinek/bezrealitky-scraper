@@ -364,8 +364,8 @@ class Database:
                                 listing_id,
                                 scope_key,
                                 run_id,
-                                json.dumps({k: v["old"] for k, v in changed.items()}),
-                                json.dumps({k: v["new"] for k, v in changed.items()}),
+                                json_dumps_safe({k: v["old"] for k, v in changed.items()}),
+                                json_dumps_safe({k: v["new"] for k, v in changed.items()}),
                             ),
                         )
                         changed_listings.append({"listing": listing, "changes": changed})
@@ -471,6 +471,18 @@ def as_number(value: object) -> Optional[float]:
     if isinstance(value, (int, float)):
         return float(value)
     return None
+
+
+def to_jsonable(value: object) -> object:
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return value
+
+
+def json_dumps_safe(value: object) -> str:
+    return json.dumps(value, ensure_ascii=False, default=to_jsonable)
 
 
 def normalize_text(text: str) -> str:
